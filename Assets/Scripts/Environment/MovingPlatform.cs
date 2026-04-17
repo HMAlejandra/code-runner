@@ -1,0 +1,33 @@
+using UnityEngine;
+
+// Plataforma que se mueve entre dos puntos (usada en Nivel 4 - Sincronía)
+public class MovingPlatform : MonoBehaviour
+{
+    public Transform pointA;
+    public Transform pointB;
+    public float speed = 2f;
+
+    private Vector3 target;
+
+    void Start() => target = pointB.position;
+
+    void Update()
+    {
+        transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+        if (Vector3.Distance(transform.position, target) < 0.05f)
+            target = target == pointA.position ? pointB.position : pointA.position;
+    }
+
+    // Mover al robot con la plataforma
+    void OnCollisionStay(Collision col)
+    {
+        if (col.gameObject.CompareTag("Player"))
+            col.transform.SetParent(transform);
+    }
+
+    void OnCollisionExit(Collision col)
+    {
+        if (col.gameObject.CompareTag("Player"))
+            col.transform.SetParent(null);
+    }
+}
