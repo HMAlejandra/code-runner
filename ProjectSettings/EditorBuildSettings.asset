@@ -11,6 +11,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Nivel1_EcosDeMovimiento.unity
     guid: 54f33d0a2beb74e72ac65caeaab87ead
+  - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: 2048bc6129e4941d08420d28d230291a
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
