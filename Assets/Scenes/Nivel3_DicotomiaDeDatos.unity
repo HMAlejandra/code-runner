@@ -1176,6 +1176,7 @@ GameObject:
   - component: {fileID: 458534372}
   - component: {fileID: 458534371}
   - component: {fileID: 458534370}
+  - component: {fileID: 458534374}
   m_Layer: 0
   m_Name: BarreraRoja
   m_TagString: BarreraA
@@ -1272,6 +1273,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &458534374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 458534369}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2888b92fb5fb846498f3902e65368574, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blocksState: 1
+  barrierRenderer: {fileID: 458534371}
+  colorA: {r: 1, g: 0, b: 0, a: 1}
+  colorB: {r: 0, g: 0, b: 1, a: 1}
 --- !u!1 &470186257
 GameObject:
   m_ObjectHideFlags: 0
@@ -2708,6 +2725,7 @@ GameObject:
   - component: {fileID: 1292363257}
   - component: {fileID: 1292363256}
   - component: {fileID: 1292363255}
+  - component: {fileID: 1292363259}
   m_Layer: 0
   m_Name: BarreraAzul
   m_TagString: BarreraB
@@ -2804,6 +2822,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1292363259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1292363254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2888b92fb5fb846498f3902e65368574, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  blocksState: 0
+  barrierRenderer: {fileID: 1292363256}
+  colorA: {r: 1, g: 0, b: 0, a: 1}
+  colorB: {r: 0, g: 0, b: 1, a: 1}
 --- !u!1 &1309831809
 GameObject:
   m_ObjectHideFlags: 0
