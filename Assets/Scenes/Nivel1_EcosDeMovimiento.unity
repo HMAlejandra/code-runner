@@ -1338,15 +1338,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 060414e2b771ac046af046f87f51e56e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  queueContainer: {fileID: 0}
-  commandBlockPrefab: {fileID: 0}
+  queueContainer: {fileID: 997981984}
+  commandBlockPrefab: {fileID: 1407181484201845176, guid: d42e911b6af874702b8eabf376599a49, type: 3}
   executeButton: {fileID: 1716170082}
   resetButton: {fileID: 2143715615}
-  successPanel: {fileID: 0}
-  failPanel: {fileID: 0}
-  emotionalLogText: {fileID: 0}
+  successPanel: {fileID: 1323161232}
+  failPanel: {fileID: 1454547341}
+  emotionalLogText: {fileID: 1108161921}
   logDuration: 3
-  stateIndicator: {fileID: 0}
+  stateIndicator: {fileID: 626002629}
   colorEstadoA: {r: 1, g: 0, b: 0, a: 1}
   colorEstadoB: {r: 0, g: 0, b: 1, a: 1}
 --- !u!1 &626002627
