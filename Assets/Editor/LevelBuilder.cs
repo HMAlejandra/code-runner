@@ -34,9 +34,9 @@ public class LevelBuilder : EditorWindow
         floor.transform.position = new Vector3(10, 0, 0);
         floor.transform.localScale = new Vector3(24, 0.5f, 4);
 
-        // Asignar material si existe
+        // Asignar material si existe (sharedMaterial: no crea instancia en memoria)
         var floorMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/FloorMaterial.mat");
-        if (floorMat != null) floor.GetComponent<Renderer>().material = floorMat;
+        if (floorMat != null) floor.GetComponent<Renderer>().sharedMaterial = floorMat;
 
         // Crear Goal
         var goal = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -47,7 +47,7 @@ public class LevelBuilder : EditorWindow
         goal.GetComponent<BoxCollider>().isTrigger = true;
 
         var goalMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/GoalMaterial.mat");
-        if (goalMat != null) goal.GetComponent<Renderer>().material = goalMat;
+        if (goalMat != null) goal.GetComponent<Renderer>().sharedMaterial = goalMat;
 
         // Crear VoidZone
         var voidZone = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -102,7 +102,7 @@ public class LevelBuilder : EditorWindow
         var uim = new GameObject("UIManager");
         uim.AddComponent<UIManager>();
 
-        // Crear Canvas con botones
+        // Crear Canvas con botones — panel UI anclado al 60%-100% derecho de la pantalla
         var canvasGO = new GameObject("Canvas");
         var canvas = canvasGO.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -112,30 +112,42 @@ public class LevelBuilder : EditorWindow
         scaler.matchWidthOrHeight = 0.5f;
         canvasGO.AddComponent<GraphicRaycaster>();
 
-        // Botones de comando
+        // Panel contenedor de UI (40% derecho)
+        var uiPanel = new GameObject("UIPanel");
+        uiPanel.transform.SetParent(canvasGO.transform, false);
+        uiPanel.layer = 5;
+        var uiPanelRT = uiPanel.AddComponent<RectTransform>();
+        uiPanelRT.anchorMin = new Vector2(0.6f, 0f);
+        uiPanelRT.anchorMax = new Vector2(1f, 1f);
+        uiPanelRT.offsetMin = Vector2.zero;
+        uiPanelRT.offsetMax = Vector2.zero;
+        var uiPanelImg = uiPanel.AddComponent<UnityEngine.UI.Image>();
+        uiPanelImg.color = new Color(0.05f, 0.05f, 0.1f, 0.92f); // fondo oscuro semitransparente
+
+        // Botones de comando — dentro del panel UI derecho
         string[] nombres = { "Mover", "Saltar", "Esperar", "Cambiar Estado" };
         CommandType[] tipos = { CommandType.MOVER, CommandType.SALTAR, CommandType.ESPERAR, CommandType.CAMBIAR_ESTADO };
         float[] posX = { -250, -80, 80, 250 };
 
         for (int i = 0; i < 4; i++)
         {
-            var btn = CreateButton(canvasGO.transform, "Boton" + nombres[i].Replace(" ", ""), nombres[i], new Vector2(posX[i], -170), new Vector2(160, 30));
+            var btn = CreateButton(uiPanel.transform, "Boton" + nombres[i].Replace(" ", ""), nombres[i], new Vector2(posX[i], -170), new Vector2(160, 30));
             var cb = btn.AddComponent<CommandButton>();
             cb.commandType = tipos[i];
         }
 
         // Boton Ejecutar
-        var ejecutar = CreateButton(canvasGO.transform, "BotonEjecutar", "Ejecutar", new Vector2(-80, -210), new Vector2(160, 30));
+        var ejecutar = CreateButton(uiPanel.transform, "BotonEjecutar", "Ejecutar", new Vector2(-80, -210), new Vector2(160, 30));
 
         // Boton Reset
-        var reset = CreateButton(canvasGO.transform, "BotonReset", "Reset", new Vector2(80, -210), new Vector2(160, 30));
+        var reset = CreateButton(uiPanel.transform, "BotonReset", "Reset", new Vector2(80, -210), new Vector2(160, 30));
 
-        // QueueContainer
+        // QueueContainer — cola de instrucciones dentro del panel UI
         var queueGO = new GameObject("QueueContainer");
-        queueGO.transform.SetParent(canvasGO.transform, false);
+        queueGO.transform.SetParent(uiPanel.transform, false);
         var queueRT = queueGO.AddComponent<RectTransform>();
-        queueRT.anchorMin = new Vector2(0.1f, 0);
-        queueRT.anchorMax = new Vector2(0.9f, 0);
+        queueRT.anchorMin = new Vector2(0.05f, 0f);
+        queueRT.anchorMax = new Vector2(0.95f, 0f);
         queueRT.anchoredPosition = new Vector2(0, -120);
         queueRT.sizeDelta = new Vector2(0, 40);
         var queueImg = queueGO.AddComponent<Image>();
@@ -144,25 +156,25 @@ public class LevelBuilder : EditorWindow
         hlg.spacing = 5;
         hlg.childAlignment = TextAnchor.MiddleCenter;
 
-        // SuccessPanel (desactivado)
-        var successPanel = CreatePanel(canvasGO.transform, "SuccessPanel", new Vector2(0.25f, 0.25f), new Vector2(0.75f, 0.75f));
+        // SuccessPanel (desactivado) — centrado en el panel UI
+        var successPanel = CreatePanel(uiPanel.transform, "SuccessPanel", new Vector2(0.05f, 0.3f), new Vector2(0.95f, 0.7f));
         var successText = CreateTMPText(successPanel.transform, "SuccessText", "¡Fragmento de memoria recuperado!\n\nEl robot ha encontrado el camino.", 28);
         var siguienteBtn = CreateButton(successPanel.transform, "BotonSiguiente", "Siguiente Nivel", new Vector2(0, -80), new Vector2(200, 40));
         successPanel.SetActive(false);
 
         // FailPanel (desactivado)
-        var failPanel = CreatePanel(canvasGO.transform, "FailPanel", new Vector2(0.3f, 0.4f), new Vector2(0.7f, 0.55f));
+        var failPanel = CreatePanel(uiPanel.transform, "FailPanel", new Vector2(0.05f, 0.4f), new Vector2(0.95f, 0.55f));
         var emotionalText = CreateTMPText(failPanel.transform, "EmotionalLogText", "", 20);
         emotionalText.GetComponent<TextMeshProUGUI>().fontStyle = FontStyles.Italic;
         emotionalText.GetComponent<TextMeshProUGUI>().color = new Color(1, 0.3f, 0.3f, 1);
         failPanel.SetActive(false);
 
-        // StateIndicator
+        // StateIndicator — esquina superior izquierda del panel UI
         var stateGO = new GameObject("StateIndicator");
-        stateGO.transform.SetParent(canvasGO.transform, false);
+        stateGO.transform.SetParent(uiPanel.transform, false);
         var stateRT = stateGO.AddComponent<RectTransform>();
-        stateRT.anchorMin = new Vector2(0, 1);
-        stateRT.anchorMax = new Vector2(0, 1);
+        stateRT.anchorMin = new Vector2(0f, 1f);
+        stateRT.anchorMax = new Vector2(0f, 1f);
         stateRT.anchoredPosition = new Vector2(40, -40);
         stateRT.sizeDelta = new Vector2(50, 50);
         var stateImg = stateGO.AddComponent<Image>();
@@ -178,9 +190,10 @@ public class LevelBuilder : EditorWindow
         uimScript.emotionalLogText = emotionalText.GetComponent<TextMeshProUGUI>();
         uimScript.stateIndicator = stateImg;
 
-        // Cargar prefab de bloque de comando
-        var cmdPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/CommandBlockPrefab.prefab");
+        // Cargar prefab de bloque de comando desde Resources (ruta canónica usada por UIManager)
+        var cmdPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Resources/CommandBlockPrefab.prefab");
         if (cmdPrefab != null) uimScript.commandBlockPrefab = cmdPrefab;
+        else Debug.LogWarning("[LevelBuilder] CommandBlockPrefab no encontrado en Assets/Resources/. Asígnalo manualmente en el Inspector del UIManager.");
 
         // EventSystem
         if (GameObject.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
@@ -190,12 +203,35 @@ public class LevelBuilder : EditorWindow
             es.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
         }
 
-        // Ajustar camara
+        // Ajustar camara: encuadre para mostrar plataformas + panel UI derecho (40% ancho)
+        // La camara se desplaza ligeramente a la izquierda para dejar espacio al panel UI
         var cam = Camera.main;
         if (cam != null)
         {
-            cam.transform.position = new Vector3(5, 3, -5);
-            cam.transform.eulerAngles = new Vector3(15, 0, 0);
+            cam.transform.position = new Vector3(7, 4, -8);
+            cam.transform.eulerAngles = new Vector3(20, 0, 0);
+            // Rect normalizado: x=0, y=0, w=0.6, h=1 → la camara ocupa el 60% izquierdo
+            // El 40% derecho queda libre para el Canvas de UI (ScreenSpaceOverlay)
+            cam.rect = new Rect(0f, 0f, 0.6f, 1f);
+        }
+
+        // Iluminacion de laboratorio oscuro: luz ambiental baja para que los elementos
+        // emisivos del Sci-Fi pack y los indicadores Rojo/Azul destaquen
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.05f, 0.05f, 0.08f, 1f); // casi negro, tinte azul oscuro
+        RenderSettings.ambientIntensity = 0.15f;
+
+        // Luz direccional principal: intensidad baja, color frio
+        var dirLight = GameObject.Find("Directional Light");
+        if (dirLight != null)
+        {
+            var lt = dirLight.GetComponent<Light>();
+            if (lt != null)
+            {
+                lt.intensity = 0.4f;
+                lt.color = new Color(0.6f, 0.7f, 1f); // blanco-azulado
+                lt.shadowStrength = 0.8f;
+            }
         }
 
         EditorSceneManager.MarkSceneDirty(scene);

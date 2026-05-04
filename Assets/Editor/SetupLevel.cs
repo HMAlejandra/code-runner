@@ -11,7 +11,7 @@ public class SetupLevel
         {
             AddTag("Goal");
             AddTag("Void");
-            AddTag("Player");
+            // AddTag("Player"); // Comentado para evitar registro duplicado
             AddTag("BarreraA");
             AddTag("BarreraB");
             AssignTagsInScene();
@@ -34,7 +34,7 @@ public class SetupLevel
             EditorUtility.SetDirty(voidZone);
         }
 
-        var robot = GameObject.Find("Robot");
+        var robot = GameObject.Find("3D Gum Bot");
         if (robot != null && robot.tag != "Player")
         {
             robot.tag = "Player";

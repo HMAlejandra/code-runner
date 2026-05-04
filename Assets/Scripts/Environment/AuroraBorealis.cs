@@ -16,30 +16,28 @@ public class AuroraBorealis : MonoBehaviour
     [Header("Particulas de estrellas")]
     public ParticleSystem starsParticles;
 
-    private Material auroraMaterial;
+    // Uses MaterialPropertyBlock to avoid creating material instances (no memory leak)
+    private MaterialPropertyBlock _propBlock;
     private Renderer rend;
+    private Vector2 _uvOffset;
 
     void Start()
     {
         rend = GetComponent<Renderer>();
-        if (rend != null)
-        {
-            auroraMaterial = new Material(rend.sharedMaterial);
-            rend.material = auroraMaterial;
-        }
+        _propBlock = new MaterialPropertyBlock();
         SetupStars();
     }
 
     void Update()
     {
-        if (auroraMaterial == null) return;
+        if (rend == null) return;
 
         float t = Time.time;
 
         // Animar offset UV para simular movimiento de la aurora
         float offsetX = Mathf.Sin(t * waveSpeed) * waveAmplitude * 0.05f;
         float offsetY = Mathf.Cos(t * waveSpeed * 0.7f) * waveAmplitude * 0.03f;
-        auroraMaterial.SetTextureOffset("_MainTex", new Vector2(offsetX, offsetY));
+        _uvOffset = new Vector2(offsetX, offsetY);
 
         // Ciclo de colores
         float cycle = Mathf.PingPong(t * colorCycleSpeed, 1f);
@@ -47,8 +45,12 @@ public class AuroraBorealis : MonoBehaviour
             ? Color.Lerp(colorVerde, colorAzul, cycle * 2f)
             : Color.Lerp(colorAzul, colorMorado, (cycle - 0.5f) * 2f);
 
-        auroraMaterial.SetColor("_TintColor", currentColor);
-        auroraMaterial.SetColor("_Color", currentColor);
+        // Apply via MaterialPropertyBlock — no material instance created
+        rend.GetPropertyBlock(_propBlock);
+        _propBlock.SetVector("_MainTex_ST", new Vector4(1f, 1f, _uvOffset.x, _uvOffset.y));
+        _propBlock.SetColor("_TintColor", currentColor);
+        _propBlock.SetColor("_Color", currentColor);
+        rend.SetPropertyBlock(_propBlock);
     }
 
     void SetupStars()
