@@ -1,115 +1,274 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Events;
 
+/// <summary>
+/// Controls Robot Kyle (URP) – movement, jump, state toggle, and aura.
+/// Handles batch command sequence execution for the programming puzzle mechanic.
+///
+/// Aura color:
+///   ESTADO_A (Logic)    → RED  point light
+///   ESTADO_B (Emotional) → BLUE point light
+/// </summary>
 public class RobotController3D : MonoBehaviour
 {
-    public enum RobotState { ESTADO_A, ESTADO_B } // L�gico (Rojo) vs Emocional (Azul)
+    // ── State ────────────────────────────────────────────────────────────────
+
+    public enum RobotState { ESTADO_A, ESTADO_B }
+
+    [Header("Current State")]
     public RobotState currentState = RobotState.ESTADO_A;
 
-    [Header("Configuraci�n Visual")]
+    // ── Visual ───────────────────────────────────────────────────────────────
+
+    [Header("Aura Light (Point Light inside chest)")]
+    [Tooltip("Drag the Point Light parented inside Kyle's chest here.")]
     public Light auraLight;
+
+    [Header("Aura Colors")]
+    public Color auraColorA = new Color(1f, 0.15f, 0.10f);   // RED  – Logic
+    public Color auraColorB = new Color(0.15f, 0.50f, 1.00f); // BLUE – Emotional
+
+    [Header("Aura Intensity")]
+    public float auraIntensity = 3.5f;
+
+    // ── Animator ─────────────────────────────────────────────────────────────
+
+    [Header("Animator (Robot Kyle)")]
+    [Tooltip("Animator component on the Kyle model. Needs bool 'IsWalking' and trigger 'Jump'.")]
     public Animator animator;
 
-    [Header("Movimiento")]
-    public float moveDistance = 2f;
-    public float moveSpeed = 5f;
+    // ── Movement ─────────────────────────────────────────────────────────────
 
-    // Variables para el reinicio del nivel
-    private Vector3 startPosition;
-    private Quaternion startRotation;
+    [Header("Movement")]
+    public float moveDistance = 2f;
+    public float moveSpeed    = 5f;
+
+    [Header("Jump")]
+    public float jumpForce    = 6f;
+    private Rigidbody _rb;
+    private bool _isGrounded = true;
+
+    // ── Events ───────────────────────────────────────────────────────────────
+
+    [Header("Emotional Log Event")]
+    [Tooltip("Wire this to CyberpunkUIManager.ShowEmotionalLog in the Inspector.")]
+    public UnityEvent<string> onEmotionalLog;
+
+    // ── Private ──────────────────────────────────────────────────────────────
+
+    private Vector3    _startPosition;
+    private Quaternion _startRotation;
+
+    // ── Emotional log messages ───────────────────────────────────────────────
+
+    private static readonly string[] CollisionMessages =
+    {
+        "Este comando duele...",
+        "Memoria corrompida...",
+        "ERROR: fragmento perdido",
+        "No puedo procesar esto...",
+        "Protocolo rechazado",
+        "Datos incoherentes detectados",
+        "Fallo en el núcleo emocional",
+        "Acceso denegado por la barrera",
+        "Consciencia fragmentada...",
+        "Ciclo roto. Reiniciando..."
+    };
+
+    // ════════════════════════════════════════════════════════════════════════
+    // LIFECYCLE
+    // ════════════════════════════════════════════════════════════════════════
+
+    void Awake()
+    {
+        _rb = GetComponent<Rigidbody>();
+    }
 
     void Start()
     {
-        // Guardamos el punto de inicio al arrancar el nivel
-        startPosition = transform.position;
-        startRotation = transform.rotation;
-
-        UpdateAura();
+        _startPosition = transform.position;
+        _startRotation = transform.rotation;
+        ApplyAura();
     }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // STATE & AURA
+    // ════════════════════════════════════════════════════════════════════════
 
     public void ToggleState()
     {
-        currentState = (currentState == RobotState.ESTADO_A) ? RobotState.ESTADO_B : RobotState.ESTADO_A;
-        UpdateAura();
+        currentState = (currentState == RobotState.ESTADO_A)
+            ? RobotState.ESTADO_B
+            : RobotState.ESTADO_A;
 
-        // Sincroniza el monitor de la interfaz de usuario
+        ApplyAura();
+
+        string msg = (currentState == RobotState.ESTADO_A)
+            ? "PROTOCOLO LÓGICO ACTIVADO"
+            : "PROTOCOLO EMOCIONAL ACTIVADO";
+
+        onEmotionalLog?.Invoke(msg);
         CyberpunkUIManager.Instance?.UpdateStateMonitor(currentState);
     }
 
-    void UpdateAura()
+    void ApplyAura()
     {
-        if (auraLight != null)
-            auraLight.color = (currentState == RobotState.ESTADO_A) ? Color.red : Color.blue;
+        if (auraLight == null) return;
+        auraLight.color     = (currentState == RobotState.ESTADO_A) ? auraColorA : auraColorB;
+        auraLight.intensity = auraIntensity;
     }
 
-    // M�todo solicitado por el error en GameManager.cs
-    public void ResetToStart()
-    {
-        StopAllCoroutines(); // Detiene cualquier movimiento en curso
+    // ════════════════════════════════════════════════════════════════════════
+    // COMMAND EXECUTION
+    // ════════════════════════════════════════════════════════════════════════
 
-        // Retorno inmediato a la posici�n inicial
-        transform.position = startPosition;
-        transform.rotation = startRotation;
-
-        // Reset de animaciones
-        if (animator != null)
-        {
-            animator.SetBool("IsWalking", false);
-            animator.Play("Idle");
-        }
-
-        // Reset de estado a Modo L�gico
-        currentState = RobotState.ESTADO_A;
-        UpdateAura();
-        CyberpunkUIManager.Instance?.UpdateStateMonitor(currentState);
-    }
-
+    /// <summary>Single command dispatch (used by ExecuteCommand string API).</summary>
     public void ExecuteCommand(string command)
     {
-        if (command == "advance") StartCoroutine(MoveForward());
-        if (command == "toggleState") ToggleState();
+        switch (command)
+        {
+            case "advance":      StartCoroutine(MoveForward()); break;
+            case "jump":         StartCoroutine(Jump());        break;
+            case "toggleState":  ToggleState();                 break;
+        }
     }
 
-    // Corrutina para ejecutar la lista de comandos (llamada desde GameManager)
+    /// <summary>
+    /// Executes a full sequence of CommandType instructions sequentially.
+    /// Called by GameManager after the player presses EJECUTAR.
+    /// </summary>
     public IEnumerator ExecuteSequence(List<CommandType> commands)
     {
         foreach (var cmd in commands)
         {
-            // CAMBIO AQU�: Usar los nombres que definiste en el Enum (MOVER y CAMBIAR_ESTADO)
-            if (cmd == CommandType.MOVER)
+            switch (cmd)
             {
-                yield return StartCoroutine(MoveForward());
-            }
-            else if (cmd == CommandType.CAMBIAR_ESTADO)
-            {
-                ToggleState();
-            }
-            // Puedes agregar SALTAR o ESPERAR si lo necesitas
-            else if (cmd == CommandType.ESPERAR)
-            {
-                yield return new WaitForSeconds(1.0f);
+                case CommandType.MOVER:
+                    yield return StartCoroutine(MoveForward());
+                    break;
+
+                case CommandType.SALTAR:
+                    yield return StartCoroutine(Jump());
+                    break;
+
+                case CommandType.ESPERAR:
+                    yield return new WaitForSeconds(1.0f);
+                    break;
+
+                case CommandType.CAMBIAR_ESTADO:
+                    ToggleState();
+                    break;
             }
 
-            yield return new WaitForSeconds(0.5f); // Pausa entre comandos
+            yield return new WaitForSeconds(0.35f); // brief pause between commands
         }
 
         GameManager.Instance?.OnSequenceComplete();
     }
 
+    // ════════════════════════════════════════════════════════════════════════
+    // MOVEMENT COROUTINES
+    // ════════════════════════════════════════════════════════════════════════
+
     IEnumerator MoveForward()
     {
-        if (animator != null) animator.SetBool("IsWalking", true);
+        SetWalking(true);
 
         Vector3 targetPos = transform.position + transform.forward * moveDistance;
 
         while (Vector3.Distance(transform.position, targetPos) > 0.05f)
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(
+                transform.position, targetPos, moveSpeed * Time.deltaTime);
             yield return null;
         }
 
-        transform.position = targetPos; // Ajuste final preciso
-        if (animator != null) animator.SetBool("IsWalking", false);
+        transform.position = targetPos;
+        SetWalking(false);
+    }
+
+    IEnumerator Jump()
+    {
+        if (!_isGrounded) yield break;
+
+        _isGrounded = false;
+
+        if (animator != null)
+            animator.SetTrigger("Jump");
+
+        if (_rb != null)
+        {
+            _rb.linearVelocity = new Vector3(_rb.linearVelocity.x, 0f, _rb.linearVelocity.z);
+            _rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+        }
+
+        // Wait until grounded again (max 2 s safety)
+        float elapsed = 0f;
+        while (!_isGrounded && elapsed < 2f)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    void SetWalking(bool value)
+    {
+        if (animator != null)
+            animator.SetBool("IsWalking", value);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // COLLISION / TRIGGER
+    // ════════════════════════════════════════════════════════════════════════
+
+    void OnCollisionEnter(Collision col)
+    {
+        // Ground detection
+        if (col.gameObject.CompareTag("Ground") || col.gameObject.layer == LayerMask.NameToLayer("Default"))
+            _isGrounded = true;
+
+        // Energy barrier collision – show emotional log
+        if (col.gameObject.CompareTag("BarreraA") || col.gameObject.CompareTag("BarreraB"))
+            TriggerCollisionLog();
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        // Energy barrier trigger – show emotional log
+        if (other.CompareTag("BarreraA") || other.CompareTag("BarreraB"))
+            TriggerCollisionLog();
+    }
+
+    public void TriggerCollisionLog()
+    {
+        string msg = CollisionMessages[Random.Range(0, CollisionMessages.Length)];
+        onEmotionalLog?.Invoke(msg);
+        CyberpunkUIManager.Instance?.ShowEmotionalLog(msg);
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // RESET
+    // ════════════════════════════════════════════════════════════════════════
+
+    public void ResetToStart()
+    {
+        StopAllCoroutines();
+
+        transform.position = _startPosition;
+        transform.rotation = _startRotation;
+
+        if (_rb != null)
+            _rb.linearVelocity = Vector3.zero;
+
+        SetWalking(false);
+        if (animator != null) animator.Play("Idle");
+
+        currentState = RobotState.ESTADO_A;
+        ApplyAura();
+
+        onEmotionalLog?.Invoke("SISTEMA REINICIADO");
+        CyberpunkUIManager.Instance?.UpdateStateMonitor(currentState);
     }
 }
