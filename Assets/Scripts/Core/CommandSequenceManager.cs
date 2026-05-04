@@ -5,6 +5,10 @@ public class CommandSequenceManager : MonoBehaviour
 {
     public static CommandSequenceManager Instance { get; private set; }
 
+    [Header("Referencias")]
+    public RobotController3D robot;
+
+    [Header("Configuración")]
     private List<CommandType> commands = new List<CommandType>();
     public int MaxCommands = 10;
 
@@ -14,12 +18,33 @@ public class CommandSequenceManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
+    // Métodos para botones manuales
+    public void AddMoveCommand() => AddCommand(CommandType.MOVER);
+    public void AddJumpCommand() => AddCommand(CommandType.SALTAR);
+    public void AddStateCommand() => AddCommand(CommandType.CAMBIAR_ESTADO);
+
+    // Método público para que otros scripts añadan comandos
     public void AddCommand(CommandType cmd)
     {
         if (commands.Count >= MaxCommands) return;
         commands.Add(cmd);
-        // Actualizado para usar CyberpunkUIManager
         CyberpunkUIManager.Instance?.RefreshQueue(commands);
+    }
+
+    // Proporciona la lista de comandos al GameManager (Arregla el error CS1061)
+    public List<CommandType> GetCommands() => new List<CommandType>(commands);
+
+    public void ExecuteSequence()
+    {
+        if (robot != null && commands.Count > 0)
+        {
+            robot.ExecuteSequence(new List<CommandType>(commands));
+            ClearCommands();
+        }
+        else
+        {
+            Debug.LogWarning("No hay robot asignado o la lista de comandos está vacía.");
+        }
     }
 
     public void RemoveCommand(int index)
@@ -34,15 +59,4 @@ public class CommandSequenceManager : MonoBehaviour
         commands.Clear();
         CyberpunkUIManager.Instance?.RefreshQueue(commands);
     }
-
-    public List<CommandType> GetCommands() => new List<CommandType>(commands);
-}
-
-// Estos son los nombres oficiales que usará todo el proyecto
-public enum CommandType
-{
-    MOVER,
-    SALTAR,
-    ESPERAR,
-    CAMBIAR_ESTADO
 }
