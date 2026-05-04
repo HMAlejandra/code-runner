@@ -3,7 +3,8 @@ using UnityEngine;
 // Barrera que solo es solida segun el estado del robot (Nivel 3 - Dicotomia)
 public class StateBarrier : MonoBehaviour
 {
-    public RobotState blocksState; // El estado que NO puede pasar
+    // CORRECCIÓN: Referencia completa al Enum dentro de RobotController3D
+    public RobotController3D.RobotState blocksState;
     public Renderer barrierRenderer;
     public Color colorA = Color.red;
     public Color colorB = Color.blue;
@@ -18,13 +19,16 @@ public class StateBarrier : MonoBehaviour
 
         if (barrierRenderer != null)
         {
-            // Use MaterialPropertyBlock to avoid creating material instances
+            // CORRECCIÓN: Uso de la ruta completa para las comparaciones
             barrierRenderer.GetPropertyBlock(_propBlock);
-            _propBlock.SetColor("_BaseColor", blocksState == RobotState.ESTADO_A ? colorA : colorB);
-            _propBlock.SetColor("_Color", blocksState == RobotState.ESTADO_A ? colorA : colorB);
+            bool isA = blocksState == RobotController3D.RobotState.ESTADO_A;
+
+            _propBlock.SetColor("_BaseColor", isA ? colorA : colorB);
+            _propBlock.SetColor("_Color", isA ? colorA : colorB);
             barrierRenderer.SetPropertyBlock(_propBlock);
         }
 
-        gameObject.tag = blocksState == RobotState.ESTADO_A ? "BarreraA" : "BarreraB";
+        // CORRECCIÓN: Referencia actualizada para asignar el Tag
+        gameObject.tag = blocksState == RobotController3D.RobotState.ESTADO_A ? "BarreraA" : "BarreraB";
     }
 }

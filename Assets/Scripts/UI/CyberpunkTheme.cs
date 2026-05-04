@@ -41,15 +41,15 @@ public static class CyberpunkTheme
         }
     }
 
-    // ── Unicode symbols used as icons (no external assets needed) ───────────
+    // ── ASCII symbols used as icons (compatible with LiberationSans SDF) ──────
     public static string Icon(CommandType t)
     {
         switch (t)
         {
-            case CommandType.MOVER:         return "▶";   // energy arrow
-            case CommandType.SALTAR:        return "⬆";   // upward arc
-            case CommandType.ESPERAR:       return "⏸";   // pause / hourglass
-            case CommandType.CAMBIAR_ESTADO:return "⇄";   // toggle / switch
+            case CommandType.MOVER:         return ">>"; // avanzar
+            case CommandType.SALTAR:        return "/\\"; // saltar
+            case CommandType.ESPERAR:       return "||"; // esperar
+            case CommandType.CAMBIAR_ESTADO:return "<>"; // cambiar estado
             default:                        return "?";
         }
     }

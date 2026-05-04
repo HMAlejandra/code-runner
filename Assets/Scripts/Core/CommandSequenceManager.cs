@@ -18,21 +18,31 @@ public class CommandSequenceManager : MonoBehaviour
     {
         if (commands.Count >= MaxCommands) return;
         commands.Add(cmd);
-        UIManager.Instance?.RefreshQueue(commands);
+        // Actualizado para usar CyberpunkUIManager
+        CyberpunkUIManager.Instance?.RefreshQueue(commands);
     }
 
     public void RemoveCommand(int index)
     {
         if (index < 0 || index >= commands.Count) return;
         commands.RemoveAt(index);
-        UIManager.Instance?.RefreshQueue(commands);
+        CyberpunkUIManager.Instance?.RefreshQueue(commands);
     }
 
     public void ClearCommands()
     {
         commands.Clear();
-        UIManager.Instance?.RefreshQueue(commands);
+        CyberpunkUIManager.Instance?.RefreshQueue(commands);
     }
 
     public List<CommandType> GetCommands() => new List<CommandType>(commands);
+}
+
+// Estos son los nombres oficiales que usará todo el proyecto
+public enum CommandType
+{
+    MOVER,
+    SALTAR,
+    ESPERAR,
+    CAMBIAR_ESTADO
 }

@@ -50,7 +50,7 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         if (executeButton) executeButton.onClick.AddListener(() => GameManager.Instance?.ExecuteSequence());
-        if (resetButton)   resetButton.onClick.AddListener(()   => GameManager.Instance?.ResetLevel());
+        if (resetButton) resetButton.onClick.AddListener(() => GameManager.Instance?.ResetLevel());
         HideSuccessPanel();
         if (failPanel) failPanel.SetActive(false);
         if (emotionalLogText) emotionalLogText.text = "";
@@ -109,7 +109,7 @@ public class UIManager : MonoBehaviour
         Invoke(nameof(HideFailPanel), logDuration);
     }
 
-    private void ClearLog()      { if (emotionalLogText) emotionalLogText.text = ""; }
+    private void ClearLog() { if (emotionalLogText) emotionalLogText.text = ""; }
     private void HideFailPanel() { if (failPanel) failPanel.SetActive(false); }
 
     // ── Panels ───────────────────────────────────────────────────────────────
@@ -136,10 +136,15 @@ public class UIManager : MonoBehaviour
 
     // ── State indicator ──────────────────────────────────────────────────────
 
-    public void UpdateStateIndicator(RobotState state)
+    // CAMBIO AQUÍ: Se especifica que RobotState viene de RobotController3D
+    public void UpdateStateIndicator(RobotController3D.RobotState state)
     {
+        // También actualizamos la llamada al CyberpunkUIManager si existe
         if (CyberpunkUIManager.Instance != null) { CyberpunkUIManager.Instance.UpdateStateMonitor(state); return; }
+
         if (stateIndicator == null) return;
-        stateIndicator.color = state == RobotState.ESTADO_A ? colorEstadoA : colorEstadoB;
+
+        // Comparamos con la ruta completa del enum
+        stateIndicator.color = (state == RobotController3D.RobotState.ESTADO_A) ? colorEstadoA : colorEstadoB;
     }
 }

@@ -6,7 +6,8 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Referencias")]
-    public RobotController robot;
+    // CORRECCIÓN: Se cambia 'RobotController' por 'RobotController3D'
+    public RobotController3D robot;
 
     private bool isRunning = false;
 
@@ -19,33 +20,38 @@ public class GameManager : MonoBehaviour
     public void ExecuteSequence()
     {
         if (isRunning) return;
+
+        // CORRECCIÓN: Referencia al Singleton correcto del CommandSequenceManager
         var commands = CommandSequenceManager.Instance.GetCommands();
         if (commands.Count == 0) return;
 
         isRunning = true;
-        UIManager.Instance?.SetExecuteButtonInteractable(false);
+
+        // CORRECCIÓN: Se usa CyberpunkUIManager si ese es el nombre de tu clase actual
+        CyberpunkUIManager.Instance?.SetExecuteButtonInteractable(false);
         StartCoroutine(robot.ExecuteSequence(commands));
     }
 
     public void OnSequenceComplete()
     {
         isRunning = false;
-        UIManager.Instance?.ShowSuccessPanel();
+        CyberpunkUIManager.Instance?.ShowSuccessPanel();
     }
 
     public void OnFail()
     {
         isRunning = false;
-        UIManager.Instance?.SetExecuteButtonInteractable(true);
+        CyberpunkUIManager.Instance?.SetExecuteButtonInteractable(true);
     }
 
     public void ResetLevel()
     {
         isRunning = false;
-        robot.ResetToStart();
+        if (robot != null) robot.ResetToStart();
+
         CommandSequenceManager.Instance.ClearCommands();
-        UIManager.Instance?.SetExecuteButtonInteractable(true);
-        UIManager.Instance?.HideSuccessPanel();
+        CyberpunkUIManager.Instance?.SetExecuteButtonInteractable(true);
+        CyberpunkUIManager.Instance?.HideSuccessPanel();
     }
 
     public void LoadNextLevel()
