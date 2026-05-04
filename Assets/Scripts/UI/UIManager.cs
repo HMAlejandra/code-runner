@@ -32,6 +32,24 @@ public class UIManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        // Auto-find queueContainer if not assigned in Inspector
+        if (queueContainer == null)
+        {
+            var panel = GameObject.Find("QueuePanel");
+            if (panel != null)
+                queueContainer = panel.transform;
+            else
+                Debug.LogWarning("[UIManager] QueuePanel not found. Please assign queueContainer in the Inspector.");
+        }
+
+        // Auto-load commandBlockPrefab if not assigned in Inspector
+        if (commandBlockPrefab == null)
+        {
+            commandBlockPrefab = Resources.Load<GameObject>("CommandBlockPrefab");
+            if (commandBlockPrefab == null)
+                Debug.LogWarning("[UIManager] CommandBlockPrefab not found in Resources. Assign it manually in the Inspector.");
+        }
     }
 
     void Start()
@@ -45,6 +63,13 @@ public class UIManager : MonoBehaviour
 
     public void RefreshQueue(List<CommandType> commands)
     {
+        if (queueContainer == null) return; // safety guard
+        if (commandBlockPrefab == null)
+        {
+            Debug.LogWarning("[UIManager] commandBlockPrefab is not assigned. Queue display skipped.");
+            return;
+        }
+
         // Limpiar bloques anteriores
         foreach (Transform child in queueContainer)
             Destroy(child.gameObject);

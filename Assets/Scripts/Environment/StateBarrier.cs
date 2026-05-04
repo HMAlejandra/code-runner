@@ -9,11 +9,22 @@ public class StateBarrier : MonoBehaviour
     public Color colorB = Color.blue;
 
     private Collider barrierCollider;
+    private MaterialPropertyBlock _propBlock;
 
     void Start()
     {
         barrierCollider = GetComponent<Collider>();
-        barrierRenderer.material.color = blocksState == RobotState.ESTADO_A ? colorA : colorB;
+        _propBlock = new MaterialPropertyBlock();
+
+        if (barrierRenderer != null)
+        {
+            // Use MaterialPropertyBlock to avoid creating material instances
+            barrierRenderer.GetPropertyBlock(_propBlock);
+            _propBlock.SetColor("_BaseColor", blocksState == RobotState.ESTADO_A ? colorA : colorB);
+            _propBlock.SetColor("_Color", blocksState == RobotState.ESTADO_A ? colorA : colorB);
+            barrierRenderer.SetPropertyBlock(_propBlock);
+        }
+
         gameObject.tag = blocksState == RobotState.ESTADO_A ? "BarreraA" : "BarreraB";
     }
 }

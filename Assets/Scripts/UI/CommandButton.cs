@@ -8,7 +8,23 @@ public class CommandButton : MonoBehaviour
 
     void Start()
     {
-        GetComponent<Button>().onClick.AddListener(() =>
-            CommandSequenceManager.Instance.AddCommand(commandType));
+        // El Button puede estar en este GameObject o en el padre
+        Button btn = GetComponent<Button>();
+        if (btn == null)
+            btn = GetComponentInParent<Button>();
+
+        if (btn == null)
+        {
+            Debug.LogError($"[CommandButton] No Button component found on {gameObject.name} or its parents.");
+            return;
+        }
+
+        btn.onClick.AddListener(() =>
+        {
+            if (CommandSequenceManager.Instance != null)
+                CommandSequenceManager.Instance.AddCommand(commandType);
+            else
+                Debug.LogError("[CommandButton] CommandSequenceManager.Instance is null!");
+        });
     }
 }

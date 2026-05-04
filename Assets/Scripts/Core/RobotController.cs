@@ -163,7 +163,7 @@ public class RobotController : MonoBehaviour
     private void ApplyStateMaterial()
     {
         if (robotRenderer == null) return;
-        robotRenderer.material = currentState == RobotState.ESTADO_A
+        robotRenderer.sharedMaterial = currentState == RobotState.ESTADO_A
             ? materialEstadoA
             : materialEstadoB;
     }
